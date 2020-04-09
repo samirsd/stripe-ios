@@ -16,9 +16,7 @@
 
 static NSString * const ResourceBaseURL = @"https://d37fzvdshh1bs8.cloudfront.net";
 
-typedef void(^STPResourceManagerImageUpdateBlock)(UIImage * _Nullable);
-typedef void(^STPResourceManagerJSONUpdateBlock)(NSDictionary * _Nullable);
-static NSTimeInterval const STPCacheExpirationInterval = (60 * 60 * 24 * 7);
+static NSTimeInterval const STPCacheExpirationInterval = (60 * 60 * 24 * 7); // 1 week
 typedef NS_ENUM(NSInteger, STPResourceType) {
     STPResourceTypeImage,
     STPResourceTypeJSON
@@ -123,8 +121,10 @@ typedef NS_ENUM(NSInteger, STPResourceType) {
     }
     NSURLSessionDownloadTask *task = [_urlSession downloadTaskWithURL:url completionHandler:^(NSURL * _Nullable location, __unused NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if (error != nil) {
-            [self->_pendingRequests removeObjectForKey:name];
-            [self->_updateBlocks removeObjectForKey:name];
+            @synchronized (self->_pendingRequests) {
+                [self->_pendingRequests removeObjectForKey:name];
+                [self->_updateBlocks removeObjectForKey:name];
+            }
             return;
         }
         if (resourceType == STPResourceTypeImage) {
@@ -144,7 +144,7 @@ typedef NS_ENUM(NSInteger, STPResourceType) {
     return [self imageNamed:name updateHandler:nil];
 }
 
-- (UIImage *)imageNamed:(NSString *)name updateHandler:(nullable void (^)(UIImage * _Nullable))updateHandler {
+- (UIImage *)imageNamed:(NSString *)name updateHandler:(nullable STPResourceManagerImageUpdateBlock)updateHandler {
     // First, check the in-memory cache.
     UIImage *image = nil;
     @synchronized (_imageCache) {
@@ -167,6 +167,11 @@ typedef NS_ENUM(NSInteger, STPResourceType) {
     }
     
     // If there isn't an image in the cache, it might be in our bundle.
+    if (image == nil) {
+        image = [UIImage imageNamed:name inBundle:[STPBundleLocator stripeResourcesBundle] compatibleWithTraitCollection:nil];
+    }
+    
+    // And if it isn't there, it might be somewhere else accessible to UIImage.
     if (image == nil) {
         image = [UIImage imageNamed:name];
     }
@@ -222,7 +227,7 @@ typedef NS_ENUM(NSInteger, STPResourceType) {
     return [self jsonNamed:name updateHandler:nil];
 }
 
-- (NSDictionary *)jsonNamed:(NSString *)name updateHandler:(nullable void (^)(NSDictionary * _Nullable))updateHandler {
+- (NSDictionary *)jsonNamed:(NSString *)name updateHandler:(nullable STPResourceManagerJSONUpdateBlock)updateHandler {
     // Get JSON from cache:
     NSDictionary *json = nil;
     @synchronized (_jsonCache) {

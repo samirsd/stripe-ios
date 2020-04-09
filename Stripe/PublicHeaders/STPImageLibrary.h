@@ -10,6 +10,7 @@
 #import <UIKit/UIKit.h>
 #import "STPFPXBankBrand.h"
 #import "STPCardBrand.h"
+#import "STPBlocks.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -71,7 +72,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
 This returns the appropriate icon for the specified bank brand.
 */
-+ (UIImage *)brandImageForFPXBankBrand:(STPFPXBankBrand)brand;
++ (UIImage *)brandImageForFPXBankBrand:(STPFPXBankBrand)brand updateHandler:(nullable STPResourceManagerImageUpdateBlock)handler;
 
 /**
  An icon representing FPX.

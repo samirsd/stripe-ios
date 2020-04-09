@@ -253,3 +253,13 @@ typedef void (^STPPaymentStatusBlock)(STPPaymentStatus status, NSError * __nulla
  */
 typedef void (^STPIntentClientSecretCompletionBlock)(NSString * __nullable clientSecret, NSError * __nullable error);
 
+
+/**
+ A block called with an updated image asset, if available.
+ */
+typedef void(^STPResourceManagerImageUpdateBlock)(UIImage * _Nullable newImage);
+
+/**
+A block called with an updated JSON dictionary, if available.
+*/
+typedef void(^STPResourceManagerJSONUpdateBlock)(NSDictionary * _Nullable newDictionary);

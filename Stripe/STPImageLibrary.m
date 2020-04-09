@@ -10,6 +10,7 @@
 
 #import "STPBundleLocator.h"
 #import "STPImageLibrary+Private.h"
+#import "STPResourceManager.h"
 
 // Dummy class for locating the framework bundle
 
@@ -73,10 +74,9 @@
     return [self safeImageNamed:imageName templateIfAvailable:NO];
 }
 
-+ (UIImage *)brandImageForFPXBankBrand:(STPFPXBankBrand)brand {
-    NSString *imageName = [NSString stringWithFormat:@"stp_bank_fpx_%@", STPIdentifierFromFPXBankBrand(brand)];
-    UIImage *image = [self safeImageNamed:imageName
-                      templateIfAvailable:NO];
++ (UIImage *)brandImageForFPXBankBrand:(STPFPXBankBrand)brand updateHandler:(nullable STPResourceManagerImageUpdateBlock)handler {
+    NSString *imageName = [NSString stringWithFormat:@"stp_bank_fpx_%@.png", STPIdentifierFromFPXBankBrand(brand)];
+    UIImage *image = [self safeImageNamed:imageName templateIfAvailable:NO updateHandler:handler];
     return image;
 }
 
@@ -122,12 +122,13 @@
 
 + (UIImage *)safeImageNamed:(NSString *)imageName
         templateIfAvailable:(BOOL)templateIfAvailable {
+    return [self safeImageNamed:imageName templateIfAvailable:templateIfAvailable updateHandler:nil];
+}
 
-    UIImage *image = [UIImage imageNamed:imageName inBundle:[STPBundleLocator stripeResourcesBundle] compatibleWithTraitCollection:nil];
-
-    if (image == nil) {
-        image = [UIImage imageNamed:imageName];
-    }
++ (UIImage *)safeImageNamed:(NSString *)imageName
+        templateIfAvailable:(BOOL)templateIfAvailable
+              updateHandler:(nullable STPResourceManagerImageUpdateBlock)handler {
+    UIImage *image = [[STPResourceManager sharedManager] imageNamed:imageName updateHandler:handler];
     if (templateIfAvailable) {
         image = [image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     }

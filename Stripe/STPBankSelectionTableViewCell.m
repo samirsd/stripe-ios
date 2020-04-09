@@ -90,7 +90,11 @@
     self.backgroundColor = theme.secondaryBackgroundColor;
 
     // Left icon
-    self.leftIcon.image = [STPImageLibrary brandImageForFPXBankBrand:self.bank];
+    self.leftIcon.image = [STPImageLibrary brandImageForFPXBankBrand:self.bank updateHandler:^(__unused UIImage * _Nullable image) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.leftIcon.image = [STPImageLibrary brandImageForFPXBankBrand:self.bank updateHandler:nil];
+        });
+    }];
     self.leftIcon.tintColor = [self primaryColorForPaymentOptionWithSelected:selected enabled: enabled];
 
     // Title label

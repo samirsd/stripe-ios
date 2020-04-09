@@ -23,6 +23,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (UIImage *)safeImageNamed:(NSString *)imageName
         templateIfAvailable:(BOOL)templateIfAvailable;
++ (UIImage *)safeImageNamed:(NSString *)imageName
+        templateIfAvailable:(BOOL)templateIfAvailable
+              updateHandler:(nullable STPResourceManagerImageUpdateBlock)handler;
 + (UIImage *)brandImageForCardBrand:(STPCardBrand)brand 
                            template:(BOOL)isTemplate;
 + (UIImage *)imageWithTintColor:(UIColor *)color
