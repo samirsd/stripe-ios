@@ -11,17 +11,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface STPResourceManager : NSObject
+@interface STPResourceManager : NSObject <NSURLSessionDelegate>
 
 + (instancetype)sharedManager;
 
-// TODO: docs here
-// name: name of resource
-// updateHandler: optional handler called if the object updates. you may receive an empty result if we don't have this file available, you should implement.
+
 - (UIImage *)imageNamed:(NSString *)name;
 - (NSDictionary *)jsonNamed:(NSString *)name;
 - (UIImage *)imageNamed:(NSString *)name updateHandler:(nullable void (^)(UIImage * _Nullable))updateHandler;
-- (NSDictionary *)jsonNamed:(NSString *)name updateHandler:(nullable void (^)(UIImage * _Nullable))updateHandler;
+- (NSDictionary *)jsonNamed:(NSString *)name updateHandler:(nullable void (^)(NSDictionary * _Nullable))updateHandler;
 
 @end
 

@@ -10,86 +10,74 @@
 #import <XCTest/XCTest.h>
 #import "STPResourceManager.h"
 
+@interface STPResourceManager (Private)
+- (NSURL *)cacheUrlForResource:(NSString *)name;
+- (void)resetDiskCache;
+- (void)resetMemoryCache;
+@end
+
 @interface STPResourceManagerTest : XCTestCase
 
 @end
 
 @implementation STPResourceManagerTest
 
-- (void)testDownload140Files {
-    [STPResourceManager sharedManager];
+- (void)testDownloadFiles {
+    [[STPResourceManager sharedManager] resetDiskCache];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Update image"];
+    UIImage *image1 = [[STPResourceManager sharedManager] imageNamed:@"a1.png"];
+    UIImage *image2 = [[STPResourceManager sharedManager] imageNamed:@"a2.png" updateHandler:^(UIImage * _Nullable image) {
+        NSLog(@"%@", image);
+        XCTAssertNotEqualObjects(image1, image);
+        [expectation fulfill];
+    }];
+    XCTAssertEqualObjects(image1, image2);
+    [self waitForExpectationsWithTimeout:5 handler:nil];
 }
-/*
-- (void)testValidUSPostalCodes {
-    NSArray *codes = @[
-                       @"10002",
-                       @"10002-1234",
-                       @"100021234",
-                       @"21218",
-                       ];
-    for (NSString *code in codes) {
-        XCTAssertEqual([STPPostalCodeValidator validationStateForPostalCode:code
-                                                                countryCode:@"US"],
-                       STPCardValidationStateValid,
-                       @"Valid US postal code test failed for code: %@", code);
+
+- (void)testDoNotUpdateIfFileInCache {
+    [[STPResourceManager sharedManager] resetDiskCache];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Wait for initial image download"];
+    UIImage *image2 = [[STPResourceManager sharedManager] imageNamed:@"a2.png" updateHandler:^(UIImage * _Nullable image) {
+        NSLog(@"%@", image);
+        [expectation fulfill];
+    }];
+    [self waitForExpectationsWithTimeout:5 handler:nil];
+
+    
+    [[STPResourceManager sharedManager] resetMemoryCache];
+    XCTestExpectation *expectation2 = [[XCTestExpectation alloc] initWithDescription:@"Wait for image to re-download (which shouldn't happen)."];
+    image2 = [[STPResourceManager sharedManager] imageNamed:@"a2.png" updateHandler:^(UIImage * _Nullable image) {
+        NSLog(@"%@", image);
+        [expectation2 fulfill];
+    }];
+    XCTWaiterResult result = [XCTWaiter waitForExpectations:@[expectation2] timeout:5];
+    if (result != XCTWaiterResultTimedOut) {
+        XCTFail("We should have timed out: The update handler was called when it shouldn't have been.");
     }
 }
 
-- (void)testInvalidUSPostalCodes {
-    NSArray *codes = @[
-                       @"100A03",
-                       @"12345-12345",
-                       @"1234512345",
-                       @"$$$$$",
-                       @"foo",
-                       ];
-    for (NSString *code in codes) {
-        XCTAssertEqual([STPPostalCodeValidator validationStateForPostalCode:code
-                                                                countryCode:@"US"],
-                       STPCardValidationStateInvalid,
-                       @"Invalid US postal code test failed for code: %@", code);
-    }
-}
+- (void)testDoUpdateIfFileIsOutdated {
+    [[STPResourceManager sharedManager] resetDiskCache];
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Wait for initial image download"];
+    UIImage *image2 = [[STPResourceManager sharedManager] imageNamed:@"a2.png" updateHandler:^(UIImage * _Nullable image) {
+        NSLog(@"%@", image);
+        [expectation fulfill];
+    }];
+    [self waitForExpectationsWithTimeout:5 handler:nil];
 
-- (void)testIncompleteUSPostalCodes {
-    NSArray *codes = @[
-                       @"",
-                       @"123",
-                       @"12345-",
-                       @"12345-12",
-                       ];
-    for (NSString *code in codes) {
-        XCTAssertEqual([STPPostalCodeValidator validationStateForPostalCode:code
-                                                                countryCode:@"US"],
-                       STPCardValidationStateIncomplete,
-                       @"Incomplete US postal code test failed for code: %@", code);
-    }
-}
+    // manually set back the file's expiration date
+    NSURL *cachedFileURL = [[STPResourceManager sharedManager] cacheUrlForResource:@"a2.png"];
+    NSDate *oneWeekAgo = [NSDate dateWithTimeIntervalSinceNow:-(60 * 60 * 24 * 7 + 60)]; // one week and 60 seconds ago
+    [[NSFileManager defaultManager] setAttributes:@{NSFileModificationDate : oneWeekAgo} ofItemAtPath:[cachedFileURL path] error:nil];
 
-- (void)testValidGenericPostalCodes {
-    NSArray *codes = @[
-                       @"ABC10002",
-                       @"10002-ABCD",
-                       @"ABCDE",
-                       ];
-    for (NSString *code in codes) {
-        XCTAssertEqual([STPPostalCodeValidator validationStateForPostalCode:code
-                                                                countryCode:@"UK"],
-                       STPCardValidationStateValid,
-                       @"Valid generic postal code test failed for code: %@", code);
-    }
+    [[STPResourceManager sharedManager] resetMemoryCache];
+    XCTestExpectation *expectation2 = [self expectationWithDescription:@"Wait for updated image redownload"];
+    image2 = [[STPResourceManager sharedManager] imageNamed:@"a2.png" updateHandler:^(UIImage * _Nullable image) {
+        NSLog(@"%@", image);
+        [expectation2 fulfill];
+    }];
+    [self waitForExpectationsWithTimeout:5 handler:nil];
 }
-
-- (void)testIncompleteGenericPostalCodes {
-    NSArray *codes = @[
-                       @"",
-                       ];
-    for (NSString *code in codes) {
-        XCTAssertEqual([STPPostalCodeValidator validationStateForPostalCode:code
-                                                                countryCode:@"UK"],
-                       STPCardValidationStateIncomplete,
-                       @"Incomplete generic postal code test failed for code: %@", code);
-    }
-}*/
 
 @end

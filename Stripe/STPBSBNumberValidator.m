@@ -14,6 +14,7 @@
 #import "STPAPIClient.h"
 #import "STPBundleLocator.h"
 #import "STPImageLibrary+Private.h"
+#import "STPResourceManager.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -63,16 +64,7 @@ static const NSUInteger kBSBNumberDashIndex = 3;
 }
 
 + (nullable NSDictionary *)_BSBData {
-    static dispatch_once_t onceToken;
-    static NSDictionary *sBSBData = nil;
-    dispatch_once(&onceToken, ^{
-        NSInputStream *inputStream = [NSInputStream inputStreamWithURL:[[STPBundleLocator stripeResourcesBundle] URLForResource:@"au_becs_bsb" withExtension:@"json"]];
-        if (inputStream != nil) {
-            [inputStream open];
-            sBSBData = [NSJSONSerialization JSONObjectWithStream:inputStream options:0 error:NULL];
-            [inputStream close];
-        }
-    });
+    NSDictionary *sBSBData = [[STPResourceManager sharedManager] jsonNamed:@"au_becs_bsb.json"];
 
     if ([[Stripe defaultPublishableKey] containsString:@"_test_"]) {
         NSMutableDictionary *editedBSBData = [sBSBData mutableCopy];
