@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-
+#import "STPBlocks.h"
 
 @class STPPaymentMethodAUBECSDebitParams;
 @class STPPaymentMethodParams;
@@ -36,7 +36,7 @@ typedef NS_ENUM(NSUInteger, STPAUBECSFormViewField) {
 
 - (NSString *)formattedStringForInput:(NSString *)input inField:(STPAUBECSFormViewField)field;
 - (nullable NSString *)bsbLabelForInput:(nullable NSString *)input editing:(BOOL)editing isErrorString:(out BOOL *)isErrorString;
-- (UIImage *)bankIconForInput:(nullable NSString *)input;
+- (UIImage *)bankIconForInput:(nullable NSString *)input updateHandler:(nullable STPResourceManagerImageUpdateBlock)handler;
 
 - (BOOL)isFieldCompleteWithInput:(NSString *)input inField:(STPAUBECSFormViewField)field editing:(BOOL)editing;
 - (BOOL)isInputValid:(NSString *)input forField:(STPAUBECSFormViewField)field editing:(BOOL)editing;

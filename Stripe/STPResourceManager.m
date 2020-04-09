@@ -112,9 +112,23 @@ typedef NS_ENUM(NSInteger, STPResourceType) {
     [blocks addObject:block];
 }
 
+- (NSString *)filenameForMainScreenSizeFromName:(NSString *)name {
+    NSString *finalString = name;
+    NSString *extension = [name pathExtension];
+    NSString *withoutExtension = [name stringByDeletingPathExtension];
+    if ([extension isEqualToString:@"png"] || [extension isEqualToString:@"jpg"] || [extension isEqualToString:@"gif"]) {
+        if ([[UIScreen mainScreen] scale] == 2.0) {
+            finalString = [[withoutExtension stringByAppendingString:@"@2x."] stringByAppendingString:extension];
+        } else if ([[UIScreen mainScreen] scale] == 3.0) {
+            finalString = [[withoutExtension stringByAppendingString:@"@3x."] stringByAppendingString:extension];
+        }
+    }
+    return finalString;
+}
+
 - (void)_downloadFile:(NSString *)name ofType:(STPResourceType)resourceType {
-    // TODO: add @2x or @3x here for images depending on our screen size. imageWithContentsOfFile and imageNamed will do this automatically. Make sure the original name is still used for tracking completion blocks/caches.
     NSString *filename = [ResourceBaseURL stringByAppendingPathComponent:name];
+    filename = [self filenameForMainScreenSizeFromName:filename];
     NSURL *url = [[NSURL alloc] initWithString:filename];
     if ([_pendingRequests objectForKey:name]) {
         return; // We're still waiting on an existing request.
@@ -178,7 +192,7 @@ typedef NS_ENUM(NSInteger, STPResourceType) {
     
     // And if we *still* have nothing, return an empty UIImage as a placeholder.
     if (image == nil) {
-        image = [UIImage stp_blankImage];
+        image = nil;
     }
     
     // Enqueue the update handler and kick off the update request:
@@ -192,7 +206,8 @@ typedef NS_ENUM(NSInteger, STPResourceType) {
 }
 
 - (void)_handleDownloadedImage:(NSURL *)location forName:(NSString *)name {
-    UIImage *image = [UIImage imageWithContentsOfFile:[location path]];
+    NSData *imageData = [NSData dataWithContentsOfURL:location];
+    UIImage *image = [UIImage imageWithData:imageData scale:[[UIScreen mainScreen] scale]];
     
     // If this isn't a valid image, we'll give up and try again on the next request.
     if (image == nil) {
@@ -203,7 +218,8 @@ typedef NS_ENUM(NSInteger, STPResourceType) {
         return;
     }
     
-    NSURL *destLocation = [self cacheUrlForResource:name];
+    NSString *destName = [self filenameForMainScreenSizeFromName:name];
+    NSURL *destLocation = [self cacheUrlForResource:destName];
     NSError *moveError = nil;
     [[NSFileManager defaultManager] stp_destructivelyMoveItemAtURL:location toURL:destLocation error:&moveError];
 

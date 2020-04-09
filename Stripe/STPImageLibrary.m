@@ -75,7 +75,7 @@
 }
 
 + (UIImage *)brandImageForFPXBankBrand:(STPFPXBankBrand)brand updateHandler:(nullable STPResourceManagerImageUpdateBlock)handler {
-    NSString *imageName = [NSString stringWithFormat:@"stp_bank_fpx_%@.png", STPIdentifierFromFPXBankBrand(brand)];
+    NSString *imageName = [NSString stringWithFormat:@"stp_bank_fpx_%@", STPIdentifierFromFPXBankBrand(brand)];
     UIImage *image = [self safeImageNamed:imageName templateIfAvailable:NO updateHandler:handler];
     return image;
 }
@@ -128,7 +128,11 @@
 + (UIImage *)safeImageNamed:(NSString *)imageName
         templateIfAvailable:(BOOL)templateIfAvailable
               updateHandler:(nullable STPResourceManagerImageUpdateBlock)handler {
-    UIImage *image = [[STPResourceManager sharedManager] imageNamed:imageName updateHandler:handler];
+    NSString *imageNameWithExtension = imageName;
+    if ([[imageNameWithExtension pathExtension] isEqualToString:@""]) {
+        imageNameWithExtension = [imageName stringByAppendingString:@".png"];
+    }
+    UIImage *image = [[STPResourceManager sharedManager] imageNamed:imageNameWithExtension updateHandler:handler];
     if (templateIfAvailable) {
         image = [image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     }

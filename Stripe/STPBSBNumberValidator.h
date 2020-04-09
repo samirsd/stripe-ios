@@ -20,7 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSString *)formattedSantizedTextFromString:(NSString *)string;
 
 + (nullable NSString *)identityForText:(NSString *)text;
-+ (UIImage *)iconForText:(nullable NSString *)text;
++ (nullable NSString *)iconNameForText:(nullable NSString *)text;
 
 @end
 

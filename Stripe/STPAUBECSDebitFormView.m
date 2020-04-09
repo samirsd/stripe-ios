@@ -132,7 +132,7 @@ NS_ASSUME_NONNULL_BEGIN
     _bsbNumberTextField.leftViewMode = UITextFieldViewModeAlways;
     _bankIconView = [[UIImageView alloc] init];
     _bankIconView.contentMode = UIViewContentModeCenter;
-    _bankIconView.image = [_viewModel bankIconForInput:nil];
+    _bankIconView.image = [_viewModel bankIconForInput:nil updateHandler:nil];
     _bankIconView.translatesAutoresizingMaskIntoConstraints = NO;
     UIView *iconContainer = [UIView new];
     [iconContainer addSubview:_bankIconView];
@@ -365,7 +365,11 @@ NS_ASSUME_NONNULL_BEGIN
         _viewModel.bsbNumber = formTextField.text;
 
         [self _updateBSBLabel];
-        _bankIconView.image = [_viewModel bankIconForInput:formTextField.text];
+        _bankIconView.image = [_viewModel bankIconForInput:formTextField.text updateHandler:^(__unused UIImage * _Nullable newImage) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self->_bankIconView.image = [self->_viewModel bankIconForInput:formTextField.text updateHandler:nil];
+            });
+        }];
 
         // Since BSB number affects validity for the account number as well, we also need to update that field
         [self _updateValidTextForField:_accountNumberTextField];

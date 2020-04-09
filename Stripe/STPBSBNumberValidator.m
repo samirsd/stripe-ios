@@ -114,14 +114,9 @@ static NSOrderedSet *sBSBKeyLengths = nil;
 + (nullable NSString *)identityForText:(NSString *)text {
     return [[self _dataForText:text] objectForKey:@"name"];
 }
-+ (UIImage *)iconForText:(nullable __unused  NSString *)text {
 
-    NSString *iconName = [[self _dataForText:text] objectForKey:@"icon"];
-    if (iconName != nil) {
-        return [STPImageLibrary safeImageNamed:iconName templateIfAvailable:NO];
-    } else {
-        return [STPImageLibrary safeImageNamed:@"stp_icon_bank" templateIfAvailable:NO];
-    }
++ (nullable NSString *)iconNameForText:(nullable __unused  NSString *)text {
+    return [[self _dataForText:text] objectForKey:@"icon"];
 }
 
 @end

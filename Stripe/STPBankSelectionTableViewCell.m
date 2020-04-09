@@ -69,7 +69,9 @@
     CGFloat iconWidth = 26.0;
 
     // Left icon
-    [self.leftIcon sizeToFit];
+    CGRect frame = self.leftIcon.frame;
+    frame.size = CGSizeMake(32, 32);
+    self.leftIcon.frame = frame;
     self.leftIcon.center = CGPointMake(padding + (iconWidth / 2.0f), midY);
 
     // Activity indicator

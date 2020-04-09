@@ -16,6 +16,8 @@
 #import "STPPaymentMethodAUBECSDebitParams.h"
 #import "STPPaymentMethodBillingDetails.h"
 #import "STPPaymentMethodParams.h"
+#import "STPImageLibrary+Private.h"
+#import "STPBlocks.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -122,8 +124,16 @@ NS_ASSUME_NONNULL_BEGIN
     }
 }
 
-- (UIImage *)bankIconForInput:(nullable NSString *)input {
-    return [STPBSBNumberValidator iconForText:input];
+- (UIImage *)bankIconForInput:(nullable NSString *)input updateHandler:(nullable STPResourceManagerImageUpdateBlock)handler {
+    UIImage *icon = nil;
+    NSString *iconName = [STPBSBNumberValidator iconNameForText:input];
+    if (iconName != nil) {
+        icon = [STPImageLibrary safeImageNamed:iconName templateIfAvailable:NO updateHandler:handler];
+    }
+    if (icon == nil) {
+        icon = [STPImageLibrary safeImageNamed:@"stp_icon_bank" templateIfAvailable:NO];
+    }
+    return icon;
 }
 
 - (BOOL)isFieldCompleteWithInput:(NSString *)input inField:(STPAUBECSFormViewField)field editing:(BOOL)editing {
