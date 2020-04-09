@@ -64,7 +64,9 @@ static const NSUInteger kBSBNumberDashIndex = 3;
 }
 
 + (nullable NSDictionary *)_BSBData {
-    NSDictionary *sBSBData = [[STPResourceManager sharedManager] jsonNamed:@"au_becs_bsb.json"];
+    NSDictionary *sBSBData = [[STPResourceManager sharedManager] jsonNamed:@"au_becs_bsb.json" updateHandler:^(__unused NSDictionary *newDictionary) {
+        [STPBSBNumberValidator _regenerateBSBKeyLenghts];
+    }];
 
     if ([[Stripe defaultPublishableKey] containsString:@"_test_"]) {
         NSMutableDictionary *editedBSBData = [sBSBData mutableCopy];
@@ -76,23 +78,28 @@ static const NSUInteger kBSBNumberDashIndex = 3;
     return sBSBData;
 }
 
-+ (nullable NSDictionary *)_dataForText:(NSString *)text {
+static NSOrderedSet *sBSBKeyLengths = nil;
 
++ (void)_regenerateBSBKeyLenghts {
+    NSDictionary *bsbData = [self _BSBData];
+    
+    NSMutableOrderedSet<NSNumber *> *keyLengths = [[NSMutableOrderedSet alloc] init];
+    for (NSString *bsbKey in bsbData.allKeys) {
+        [keyLengths addObject:@(bsbKey.length)];
+    }
+    [keyLengths sortUsingComparator:^NSComparisonResult(NSNumber *  _Nonnull obj1, NSNumber *  _Nonnull obj2) {
+        // obj2 first so we get highest to lowest
+        return [obj2 compare:obj1];
+    }];
+    sBSBKeyLengths = [keyLengths copy];
+}
+
++ (nullable NSDictionary *)_dataForText:(NSString *)text {
     NSDictionary *bsbData = [self _BSBData];
 
-    static dispatch_once_t onceToken;
-    static NSOrderedSet *sBSBKeyLengths = nil;
-    dispatch_once(&onceToken, ^{
-        NSMutableOrderedSet<NSNumber *> *keyLengths = [[NSMutableOrderedSet alloc] init];
-        for (NSString *bsbKey in bsbData.allKeys) {
-            [keyLengths addObject:@(bsbKey.length)];
-        }
-        [keyLengths sortUsingComparator:^NSComparisonResult(NSNumber *  _Nonnull obj1, NSNumber *  _Nonnull obj2) {
-            // obj2 first so we get highest to lowest
-            return [obj2 compare:obj1];
-        }];
-        sBSBKeyLengths = [keyLengths copy];
-    });
+    if (sBSBKeyLengths == nil) {
+        [STPBSBNumberValidator _regenerateBSBKeyLenghts];
+    }
 
     for (NSNumber *keyLength in sBSBKeyLengths) {
         NSString *subString = [text stp_safeSubstringToIndex:[keyLength unsignedIntegerValue]];
