@@ -14,6 +14,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSData *)stp_jpegDataWithMaxFileSize:(NSUInteger)maxBytes;
 @end
 
+@interface UIImage (STPBlankImage)
++ (UIImage *)stp_blankImage;
+@end
+
 NS_ASSUME_NONNULL_END
 
 void linkUIImageCategory(void);

@@ -25,7 +25,7 @@ Returns an image resource with the specified name.
 - (UIImage *)imageNamed:(NSString *)name;
 
 /**
-Returns a dictionary containing the contents of a JSON resource.
+Returns a dictionary containing the contents of a named JSON resource.
 
 @param name This is the full filename, such as `banks.json`.
 @param updateHandler If an updated dictionary is available, this handler will be called. It won't be called if the originally returned dictionary was already up to date.

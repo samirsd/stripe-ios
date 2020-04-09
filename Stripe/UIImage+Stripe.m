@@ -45,4 +45,17 @@
 
 @end
 
+@implementation UIImage (STPBlankImage)
++ (UIImage *)stp_blankImage {
+    static UIImage *blankImage;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        UIGraphicsBeginImageContextWithOptions(CGSizeMake(100, 100), NO, 0);
+        blankImage = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+    });
+    return blankImage;
+}
+@end
+
 void linkUIImageCategory(void){}

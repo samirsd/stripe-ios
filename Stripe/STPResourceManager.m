@@ -8,6 +8,11 @@
 
 #import "STPResourceManager.h"
 #import "STPBundleLocator.h"
+#import "UIImage+Stripe.h"
+#import "NSFileManager+Stripe.h"
+#import "NSJSONSerialization+Stripe.h"
+
+#pragma mark Constants
 
 static NSString * const ResourceBaseURL = @"https://d37fzvdshh1bs8.cloudfront.net";
 
@@ -19,73 +24,7 @@ typedef NS_ENUM(NSInteger, STPResourceType) {
     STPResourceTypeJSON
 };
 
-
-@interface NSFileManager (STPOverwriting)
-- (BOOL)stp_destructivelyMoveItemAtURL:(NSURL *)srcURL toURL:(NSURL *)dstURL error:(NSError **)error;
-@end
-
-@implementation NSFileManager (STPOverwriting)
-- (BOOL)stp_destructivelyMoveItemAtURL:(NSURL *)srcURL toURL:(NSURL *)dstURL error:(NSError **)error {
-    NSError *moveError;
-    BOOL didMove = [[NSFileManager defaultManager] moveItemAtURL:srcURL toURL:dstURL error:&moveError];
-    // The file may already exist, in which case we'd like to replace it:
-    if (moveError.code == NSFileWriteFileExistsError) {
-        [[NSFileManager defaultManager] removeItemAtURL:dstURL error:nil];
-        didMove = [[NSFileManager defaultManager] moveItemAtURL:srcURL toURL:dstURL error:&moveError];
-    }
-    
-    if (error) {
-        *error = moveError;
-    }
-    return didMove;
-}
-@end
-
-@interface UIImage (STPBlankImage)
-+ (UIImage *)stp_blankImage;
-@end
-
-@implementation UIImage (STPBlankImage)
-+ (UIImage *)stp_blankImage {
-    static UIImage *blankImage;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        UIGraphicsBeginImageContextWithOptions(CGSizeMake(100, 100), NO, 0);
-        blankImage = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
-    });
-    return blankImage;
-}
-@end
-
-@interface NSJSONSerialization (STPDeserializeDictionary)
-+ (NSDictionary * _Nullable)stp_JSONDictionaryWithData:(NSData *)data;
-@end
-
-@implementation NSJSONSerialization (STPDeserializeDictionary)
-+ (NSDictionary * _Nullable)stp_JSONDictionaryWithData:(NSData *)data {
-    if (data == nil) {
-        return nil;
-    }
-    NSError *jsonError;
-    NSDictionary *json = nil;
-
-    // This can throw exceptions internally if we give it bad data.
-    // Wrap it in a try/catch block and return nil on failures. We can't do anything sensible if the JSON isn't valid.
-    @try {
-        json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
-    } @catch (NSException *exception) {
-        return nil;
-    }
-
-    if (jsonError == nil && json != nil && [json isKindOfClass:[NSDictionary class]]) {
-        return json;
-    }
-    
-    return nil;
-}
-
-@end
+#pragma mark Extensions
 
 @implementation STPResourceManager {
     dispatch_queue_t _resourceQueue;
@@ -152,8 +91,7 @@ typedef NS_ENUM(NSInteger, STPResourceType) {
     return NO;
 }
 
-- (NSURL *)cacheUrlForResource:(NSString *)name
-{
+- (NSURL *)cacheUrlForResource:(NSString *)name {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     NSString *temporaryDirectory = [paths objectAtIndex:0];
     NSString *stpCachePath = [temporaryDirectory stringByAppendingPathComponent:@"STPCache"];
@@ -176,9 +114,8 @@ typedef NS_ENUM(NSInteger, STPResourceType) {
     [blocks addObject:block];
 }
 
-
 - (void)_downloadFile:(NSString *)name ofType:(STPResourceType)resourceType {
-    // TODO: add @2x or @3x here for images depending on our screen size. imageWithContentsOfFile and imageNamed will do this automatically. make sure the right name is still used for completion blocks.
+    // TODO: add @2x or @3x here for images depending on our screen size. imageWithContentsOfFile and imageNamed will do this automatically. Make sure the original name is still used for tracking completion blocks/caches.
     NSString *filename = [ResourceBaseURL stringByAppendingPathComponent:name];
     NSURL *url = [[NSURL alloc] initWithString:filename];
     if ([_pendingRequests objectForKey:name]) {
