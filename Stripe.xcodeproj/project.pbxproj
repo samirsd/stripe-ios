@@ -456,6 +456,9 @@
 		31B9609722FE20DF00DC6FD9 /* STPBankSelectionTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 31B9609422FE20DE00DC6FD9 /* STPBankSelectionTableViewCell.m */; };
 		31B9609822FE20DF00DC6FD9 /* STPBankSelectionTableViewCell.h in Headers */ = {isa = PBXBuildFile; fileRef = 31B9609522FE20DF00DC6FD9 /* STPBankSelectionTableViewCell.h */; };
 		31B9609922FE20DF00DC6FD9 /* STPBankSelectionTableViewCell.h in Headers */ = {isa = PBXBuildFile; fileRef = 31B9609522FE20DF00DC6FD9 /* STPBankSelectionTableViewCell.h */; };
+		31C332A4243E5A1300FBF9AD /* STPResourceManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 31C332A2243E5A1300FBF9AD /* STPResourceManager.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		31C332A5243E5A1300FBF9AD /* STPResourceManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 31C332A3243E5A1300FBF9AD /* STPResourceManager.m */; };
+		31C332A7243EA50500FBF9AD /* STPResourceManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 31C332A6243EA50500FBF9AD /* STPResourceManagerTest.m */; };
 		31C826A5232C19B9002ECB0A /* stp_fpx_big_logo.png in Resources */ = {isa = PBXBuildFile; fileRef = 31A89345230F64E1007ABE37 /* stp_fpx_big_logo.png */; };
 		31C826A6232C19B9002ECB0A /* stp_fpx_big_logo@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 31B9609A23021C7000DC6FD9 /* stp_fpx_big_logo@2x.png */; };
 		31C826A7232C19B9002ECB0A /* stp_fpx_big_logo@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 31A89346230F64E1007ABE37 /* stp_fpx_big_logo@3x.png */; };
@@ -1757,6 +1760,9 @@
 		31B960A6230381E700DC6FD9 /* stp_bank_fpx_bsn@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "stp_bank_fpx_bsn@2x.png"; sourceTree = "<group>"; };
 		31B960A7230381E700DC6FD9 /* stp_bank_fpx_kfh@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "stp_bank_fpx_kfh@2x.png"; sourceTree = "<group>"; };
 		31B960A8230381E800DC6FD9 /* stp_bank_fpx_affin_bank@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "stp_bank_fpx_affin_bank@2x.png"; sourceTree = "<group>"; };
+		31C332A2243E5A1300FBF9AD /* STPResourceManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = STPResourceManager.h; sourceTree = "<group>"; };
+		31C332A3243E5A1300FBF9AD /* STPResourceManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = STPResourceManager.m; sourceTree = "<group>"; };
+		31C332A6243EA50500FBF9AD /* STPResourceManagerTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = STPResourceManagerTest.m; sourceTree = "<group>"; };
 		31C8260C232C163B002ECB0A /* stp_bank_fpx_alliance_bank@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "stp_bank_fpx_alliance_bank@2x.png"; sourceTree = "<group>"; };
 		31C8260D232C163C002ECB0A /* stp_bank_fpx_ocbc.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = stp_bank_fpx_ocbc.png; sourceTree = "<group>"; };
 		31C8260E232C163C002ECB0A /* stp_bank_fpx_cimb@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "stp_bank_fpx_cimb@2x.png"; sourceTree = "<group>"; };
@@ -3240,6 +3246,7 @@
 				C1EEDCC91CA2186300A54582 /* STPPhoneNumberValidatorTest.m */,
 				C1FEE5981CBFF24000A7632B /* STPPostalCodeValidatorTest.m */,
 				F152321A1EA92F9D00D65C67 /* STPRedirectContextTest.m */,
+				31C332A6243EA50500FBF9AD /* STPResourceManagerTest.m */,
 				36D4EA6022DD33DF00619BA8 /* STPSetupIntentConfirmParamsTest.m */,
 				B64763B822FE1AF700C01BC0 /* STPSetupIntentLastSetupErrorTest.m */,
 				B613DD3B22C54AA800C7603F /* STPSetupIntentTest.m */,
@@ -3451,6 +3458,8 @@
 				36B8DDEE241BF99600BB908E /* STPBECSDebitAccountNumberValidator.h */,
 				36B8DDEF241BF99600BB908E /* STPBECSDebitAccountNumberValidator.m */,
 				045D712A1CF4ED7600F6CD65 /* STPBINRange.h */,
+				31C332A2243E5A1300FBF9AD /* STPResourceManager.h */,
+				31C332A3243E5A1300FBF9AD /* STPResourceManager.m */,
 				045D712B1CF4ED7600F6CD65 /* STPBINRange.m */,
 				366658C22411934900D00354 /* STPBSBNumberValidator.h */,
 				366658C32411934900D00354 /* STPBSBNumberValidator.m */,
@@ -4212,6 +4221,7 @@
 				314F9CC0235E66920059E2F6 /* STPFPXBankStatusResponse.h in Headers */,
 				F1852F931D80B6EC00367C86 /* STPStringUtils.h in Headers */,
 				B6A46F7622FCDB81001991B2 /* STPPaymentIntentLastPaymentError.h in Headers */,
+				31C332A4243E5A1300FBF9AD /* STPResourceManager.h in Headers */,
 				049A3FAE1CC9AA9900F57DE7 /* STPAddressViewModel.h in Headers */,
 				C175B7941FE834A3009F5A0E /* STPCustomer+Private.h in Headers */,
 				F1D3A2651EBA5BAE0095BFA9 /* STPPaymentCardTextField+Private.h in Headers */,
@@ -5018,6 +5028,7 @@
 				C19D09931EAEAE5E00A4AB3E /* STPTelemetryClientTest.m in Sources */,
 				04E7D4BA233FEFDF00FC8C02 /* STPPushProvisioningDetailsFunctionalTest.m in Sources */,
 				F152321B1EA92F9D00D65C67 /* STPRedirectContextTest.m in Sources */,
+				31C332A7243EA50500FBF9AD /* STPResourceManagerTest.m in Sources */,
 				B6B41F73223476B90020BA7F /* STPPaymentMethodCardWalletVisaCheckoutTest.m in Sources */,
 				04415C6D1A6605B5001225ED /* STPCardFunctionalTest.m in Sources */,
 				3194CF5C2314869500E1940F /* STPPaymentMethodFPXTest.m in Sources */,
@@ -5336,6 +5347,7 @@
 				36B8DDE3241AC0A100BB908E /* STPLabeledFormTextFieldView.m in Sources */,
 				B63E42762231D78D007B5B95 /* STPPaymentMethodCardParams.m in Sources */,
 				049A3FAF1CC9AA9900F57DE7 /* STPAddressViewModel.m in Sources */,
+				31C332A5243E5A1300FBF9AD /* STPResourceManager.m in Sources */,
 				314F9CC2235E66920059E2F6 /* STPFPXBankStatusResponse.m in Sources */,
 				073132972277A72D0019CE3F /* STPIssuingCardPin.m in Sources */,
 				04695ADC1C77F9EF00E08063 /* STPPhoneNumberValidator.m in Sources */,
