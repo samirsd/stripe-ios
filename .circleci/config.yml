@@ -5,13 +5,13 @@ version: 2.1
 
 jobs:
   build:
-
     macos:
       xcode: 11.6.0 # Specify the Xcode version to use
+      resource_class: large
 
     steps:
       - checkout
-      - run: "open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app --args -CurrentDeviceUDID $SIMULATOR_ID"
+      - run: "bundle install"
       - run: "./ci_scripts/check_version.rb"
       - run: "./ci_scripts/check_public_headers.rb"
       - run: "./ci_scripts/check_category_linking.rb"
