@@ -27,6 +27,8 @@ platform :ios do
 
   lane :all_ci do
     standard_tests
+    integration_tests
+    linting_tests
     install_tests
     legacy_tests_10
     legacy_tests_11
@@ -34,8 +36,11 @@ platform :ios do
   end
 
   lane :standard_tests do
-    preflight
     old_tests
+  end
+  
+  lane :linting_tests do
+    preflight
     ui_tests
     analyze
     builds
@@ -68,6 +73,12 @@ platform :ios do
   lane :old_tests do
     Dir.chdir("..") do
       sh("./ci_scripts/run_tests.sh")
+    end
+  end
+
+  lane :integration_tests do
+    Dir.chdir("..") do
+      sh("./ci_scripts/run_integration_tests.sh")
     end
   end
 

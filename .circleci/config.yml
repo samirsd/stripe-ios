@@ -13,6 +13,24 @@ jobs:
       - run: "bundle install"
       - run: "bundle exec fastlane standard_tests"
 
+  integration-tests:
+    macos:
+      xcode: 11.6.0 # Specify the Xcode version to use
+
+    steps:
+      - checkout
+      - run: "bundle install"
+      - run: "bundle exec fastlane integration_tests"
+
+  linting-tests:
+    macos:
+      xcode: 11.6.0 # Specify the Xcode version to use
+
+    steps:
+      - checkout
+      - run: "bundle install"
+      - run: "bundle exec fastlane linting_tests"
+          
   install-tests:
     macos:
       xcode: 11.6.0 # Specify the Xcode version to use
@@ -59,6 +77,8 @@ workflows:
   build-and-test:
     jobs:
       - standard_tests
+      - integration_tests
+      - linting_tests
       - install-tests
       - test-legacy-10
       - test-legacy-11
