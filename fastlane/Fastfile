@@ -25,6 +25,14 @@ platform :ios do
     capture_screenshots(workspace: "Stripe.xcworkspace", scheme: "LocalizationTester")
   end
 
+  lane :all_ci do
+    standard_tests
+    install_tests
+    legacy_tests_10
+    legacy_tests_11
+    legacy_tests_12
+  end
+
   lane :standard_tests do
     preflight
     lint
