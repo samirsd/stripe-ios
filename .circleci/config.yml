@@ -4,7 +4,7 @@
 version: 2.1
 
 jobs:
-  build-and-test:
+  standard_tests:
     macos:
       xcode: 11.6.0 # Specify the Xcode version to use
 
@@ -58,7 +58,7 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-      - build-and-test
+      - standard_tests
       - install-tests
       - test-legacy-10
       - test-legacy-11
