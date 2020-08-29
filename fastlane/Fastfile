@@ -120,7 +120,7 @@ platform :ios do
     end
   end
   
-  lane :install_carthage do
+  lane :installation_carthage do
     Dir.chdir("..") do
       sh("./Tests/installation_tests/carthage/test.sh")
     end
