@@ -29,7 +29,6 @@ platform :ios do
     standard_tests
     integration_tests
     linting_tests
-    install_tests
     legacy_tests_10
     legacy_tests_11
     # legacy_tests_12
@@ -37,6 +36,7 @@ platform :ios do
 
   lane :standard_tests do
     old_tests
+    install_tests
   end
   
   lane :linting_tests do
