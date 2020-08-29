@@ -28,8 +28,8 @@ jobs:
 
     steps:
       - checkout
-      - run: gem install xcode-install
-      - run: xcversion simulators --install="10.3.1" --no-progress
+      - run: sudo gem install xcode-install
+      - run: sudo xcversion simulators --install="10.3.1" --no-progress
       - run: "bundle install"
       - run: "bundle exec fastlane legacy_tests_10"
 
@@ -39,8 +39,8 @@ jobs:
 
     steps:
       - checkout
-      - run: gem install xcode-install
-      - run: xcversion simulators --install="11.4" --no-progress
+      - run: sudo gem install xcode-install
+      - run: sudo xcversion simulators --install="11.4" --no-progress
       - run: "bundle install"
       - run: "bundle exec fastlane legacy_tests_11"
 
@@ -50,8 +50,8 @@ jobs:
 
     steps:
       - checkout
-      - run: gem install xcode-install
-      - run: xcversion simulators --install="12.4" --no-progress
+      - run: sudo gem install xcode-install
+      - run: sudo xcversion simulators --install="12.4" --no-progress
       - run: "bundle install"
       - run: "bundle exec fastlane legacy_tests_12"      
 
