@@ -35,7 +35,7 @@ platform :ios do
 
   lane :standard_tests do
     preflight
-    tests
+    old_tests
     ui_tests
     analyze
     builds
@@ -62,6 +62,12 @@ platform :ios do
   lane :lint do
     Dir.chdir("..") do
       sh("./ci_scripts/check_fauxpas.sh")
+    end
+  end
+
+  lane :old_tests do
+    Dir.chdir("..") do
+      sh("./ci_scripts/run_tests.sh")
     end
   end
 

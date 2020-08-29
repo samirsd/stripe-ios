@@ -46,6 +46,11 @@ fastlane ios preflight
 fastlane ios lint
 ```
 
+### ios old_tests
+```
+fastlane ios old_tests
+```
+
 ### ios ui_tests
 ```
 fastlane ios ui_tests
