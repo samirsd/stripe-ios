@@ -30,7 +30,7 @@ platform :ios do
     install_tests
     legacy_tests_10
     legacy_tests_11
-    legacy_tests_12
+    # legacy_tests_12
   end
 
   lane :standard_tests do

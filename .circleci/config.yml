@@ -44,16 +44,16 @@ jobs:
       - run: "bundle install"
       - run: "bundle exec fastlane legacy_tests_11"
 
-  test-legacy-12:
-    macos:
-      xcode: 11.6.0 # Specify the Xcode version to use
+  # test-legacy-12:
+  #   macos:
+  #     xcode: 11.6.0 # Specify the Xcode version to use
 
-    steps:
-      - checkout
-      - run: sudo gem install xcode-install
-      - run: sudo xcversion simulators --install="iOS 12.4" --no-progress || true
-      - run: "bundle install"
-      - run: "bundle exec fastlane legacy_tests_12"      
+  #   steps:
+  #     - checkout
+  #     - run: sudo gem install xcode-install
+  #     - run: sudo xcversion simulators --install="iOS 12.4" --no-progress || true
+  #     - run: "bundle install"
+  #     - run: "bundle exec fastlane legacy_tests_12"      
 
 workflows:
   build-and-test:
@@ -62,4 +62,3 @@ workflows:
       - install-tests
       - test-legacy-10
       - test-legacy-11
-      - test-legacy-12
