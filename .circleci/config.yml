@@ -29,6 +29,7 @@ jobs:
     steps:
       - checkout
       - run: "bundle install"
+      - run: "bundle exec gem install jazzy"
       - run: "bundle exec fastlane linting_tests"
           
   install-tests:
