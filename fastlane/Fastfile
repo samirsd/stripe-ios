@@ -22,7 +22,59 @@ platform :ios do
   end
 
   lane :preflight do
-    sh("")
+    sh("./ci_scripts/check_version.rb")
+    sh("./ci_scripts/check_public_headers.rb")
+    sh("./ci_scripts/check_category_linking.rb")
+    sh("./ci_scripts/check_resource_bundle.rb")
+    sh("./ci_scripts/check_for_new_localized_strings.sh")
+  end
+
+  lane :lint do
+    sh("./ci_scripts/check_fauxpas.sh")
+  end
+
+  lane :ui_tests do
+    sh("./ci_scripts/run_ui_tests.sh")
+  end
+
+  lane :legacy_tests_10 do
+    sh("./ci_scripts/run_legacy_tests.sh \"platform=iOS Simulator,name=iPhone 6,OS=10.3.1\"'")
+  end
+
+  lane :legacy_tests_11 do
+    sh("./ci_scripts/run_legacy_tests.sh \"platform=iOS Simulator,name=iPhone 6,OS=11.4"\"'")
+  end
+
+  lane :legacy_tests_12 do
+    sh("./ci_scripts/run_legacy_tests.sh \"platform=iOS Simulator,name=iPhone 6,OS=12.4"\"'")
+  end
+
+  lane :analyze do
+    sh("./ci_scripts/run_analyzer.sh")
+  end
+
+  lane :builds do
+    sh("./ci_scripts/run_builds.sh")
+  end
+
+  lane :install_cocoapods_without_frameworks_objc do
+    sh("./Tests/installation_tests/cocoapods/without_frameworks_objc/test.sh")
+  end
+
+  lane :installation_cocoapods_frameworks_objc do
+    sh("./Tests/installation_tests/cocoapods/with_frameworks_objc/test.sh")
+  end
+
+  lane :installation_cocoapods_frameworks_swift do
+    sh("./Tests/installation_tests/cocoapods/with_frameworks_swift/test.sh")
+  end
+  
+  lane :install_carthage do
+    sh("./Tests/installation_tests/carthage/test.sh")
+  end
+
+  lane :check_docs do
+    sh("./ci_scripts/check_documentation.sh")
   end
 
   lane :tests do
