@@ -35,7 +35,6 @@ platform :ios do
 
   lane :standard_tests do
     preflight
-    lint
     tests
     ui_tests
     analyze

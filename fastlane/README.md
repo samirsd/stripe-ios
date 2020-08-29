@@ -91,9 +91,9 @@ fastlane ios installation_cocoapods_frameworks_objc
 fastlane ios installation_cocoapods_frameworks_swift
 ```
 
-### ios install_carthage
+### ios installation_carthage
 ```
-fastlane ios install_carthage
+fastlane ios installation_carthage
 ```
 
 ### ios check_docs
