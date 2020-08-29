@@ -4,22 +4,56 @@
 version: 2.1
 
 jobs:
-  build:
+  build-and-test:
     macos:
       xcode: 11.6.0 # Specify the Xcode version to use
 
     steps:
       - checkout
       - run: "bundle install"
-      - run: "fastlane preflight"
-      - run: "fastlane tests"
-      
-      # - run: fastlane scan # Run tests using Fastlane
+      - run: "bundle exec fastlane standard_tests"
 
-      # Collect XML test results data to show in the UI, and save the same XML
-      # files under test-results folder in the Artifacts tab
-      - store_test_results:
-          path: test_output
-      - store_artifacts:
-          path: test_output
-          destination: scan-output
+  install-tests:
+    macos:
+      xcode: 11.6.0 # Specify the Xcode version to use
+
+    steps:
+      - checkout
+      - run: "bundle install"
+      - run: "bundle exec fastlane install_tests"
+    
+  test-legacy-10:
+    macos:
+      xcode: 11.6.0 # Specify the Xcode version to use
+
+    steps:
+      - checkout
+      - run: "bundle install"
+      - run: "bundle exec fastlane legacy_tests_10"
+
+  test-legacy-11:
+    macos:
+      xcode: 11.6.0 # Specify the Xcode version to use
+
+    steps:
+      - checkout
+      - run: "bundle install"
+      - run: "bundle exec fastlane legacy_tests_11"
+
+  test-legacy-12:
+    macos:
+      xcode: 11.6.0 # Specify the Xcode version to use
+
+    steps:
+      - checkout
+      - run: "bundle install"
+      - run: "bundle exec fastlane legacy_tests_12"      
+
+workflows:
+  build-and-test:
+    jobs:
+      - build-and-test
+      - install-tests
+      - test-legacy-10
+      - test-legacy-11
+      - test-legacy-12

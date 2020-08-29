@@ -16,65 +16,112 @@
 default_platform(:ios)
 
 platform :ios do
+  before_all do
+    setup_circle_ci
+  end
+
   desc "Generate new localized screenshots"
   lane :screenshots do
     capture_screenshots(workspace: "Stripe.xcworkspace", scheme: "LocalizationTester")
   end
 
+  lane :standard_tests do
+    preflight
+    lint
+    tests
+    ui_tests
+    analyze
+    builds
+    check_docs
+  end
+
+  lane :install_tests do
+    install_cocoapods_without_frameworks_objc
+    installation_cocoapods_frameworks_objc
+    installation_cocoapods_frameworks_swift
+    installation_carthage
+  end
+
   lane :preflight do
-    sh("./ci_scripts/check_version.rb")
-    sh("./ci_scripts/check_public_headers.rb")
-    sh("./ci_scripts/check_category_linking.rb")
-    sh("./ci_scripts/check_resource_bundle.rb")
-    sh("./ci_scripts/check_for_new_localized_strings.sh")
+    Dir.chdir("..") do
+      sh("./ci_scripts/check_version.rb")
+      sh("./ci_scripts/check_public_headers.rb")
+      sh("./ci_scripts/check_category_linking.rb")
+      sh("./ci_scripts/check_resource_bundle.rb")
+      sh("./ci_scripts/check_for_new_localized_strings.sh")
+    end
   end
 
   lane :lint do
-    sh("./ci_scripts/check_fauxpas.sh")
+    Dir.chdir("..") do
+      sh("./ci_scripts/check_fauxpas.sh")
+    end
   end
 
   lane :ui_tests do
-    sh("./ci_scripts/run_ui_tests.sh")
+    Dir.chdir("..") do
+      sh("./ci_scripts/run_ui_tests.sh")
+    end
   end
 
   lane :legacy_tests_10 do
-    sh("./ci_scripts/run_legacy_tests.sh \"platform=iOS Simulator,name=iPhone 6,OS=10.3.1\"'")
+    Dir.chdir("..") do
+      sh("./ci_scripts/run_legacy_tests.sh \"platform=iOS Simulator,name=iPhone 6,OS=10.3.1\"")
+    end
   end
 
   lane :legacy_tests_11 do
-    sh("./ci_scripts/run_legacy_tests.sh \"platform=iOS Simulator,name=iPhone 6,OS=11.4"\"'")
+    Dir.chdir("..") do
+      sh("./ci_scripts/run_legacy_tests.sh \"platform=iOS Simulator,name=iPhone 6,OS=11.4\"")
+    end
   end
 
   lane :legacy_tests_12 do
-    sh("./ci_scripts/run_legacy_tests.sh \"platform=iOS Simulator,name=iPhone 6,OS=12.4"\"'")
+    Dir.chdir("..") do
+      sh("./ci_scripts/run_legacy_tests.sh \"platform=iOS Simulator,name=iPhone 6,OS=12.4\"")
+    end
   end
 
   lane :analyze do
-    sh("./ci_scripts/run_analyzer.sh")
+    Dir.chdir("..") do
+      sh("./ci_scripts/run_analyzer.sh")
+    end
   end
 
   lane :builds do
-    sh("./ci_scripts/run_builds.sh")
+    Dir.chdir("..") do
+      sh("./ci_scripts/run_builds.sh")
+    end
   end
 
   lane :install_cocoapods_without_frameworks_objc do
-    sh("./Tests/installation_tests/cocoapods/without_frameworks_objc/test.sh")
+    Dir.chdir("..") do
+      sh("./Tests/installation_tests/cocoapods/without_frameworks_objc/test.sh")
+    end
   end
 
   lane :installation_cocoapods_frameworks_objc do
-    sh("./Tests/installation_tests/cocoapods/with_frameworks_objc/test.sh")
+    Dir.chdir("..") do
+      sh("./Tests/installation_tests/cocoapods/with_frameworks_objc/test.sh")
+    end
   end
 
   lane :installation_cocoapods_frameworks_swift do
-    sh("./Tests/installation_tests/cocoapods/with_frameworks_swift/test.sh")
+    Dir.chdir("..") do
+      sh("./Tests/installation_tests/cocoapods/with_frameworks_swift/test.sh")
+    end
   end
   
   lane :install_carthage do
-    sh("./Tests/installation_tests/carthage/test.sh")
+    Dir.chdir("..") do
+      sh("./Tests/installation_tests/carthage/test.sh")
+    end
   end
 
   lane :check_docs do
-    sh("./ci_scripts/check_documentation.sh")
+    Dir.chdir("..") do
+      sh("./ci_scripts/check_documentation.sh")
+    end
   end
 
   lane :tests do

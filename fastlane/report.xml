@@ -5,12 +5,37 @@
     
     
       
-      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.00032">
+      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.000346">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="1: capture_screenshots" time="808.507423">
+      <testcase classname="fastlane.lanes" name="1: setup_circle_ci" time="0.00059">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="2: ./ci_scripts/check_version.rb" time="0.249064">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="3: ./ci_scripts/check_public_headers.rb" time="0.605974">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="4: ./ci_scripts/check_category_linking.rb" time="0.293106">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="5: ./ci_scripts/check_resource_bundle.rb" time="0.658498">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="6: ./ci_scripts/check_for_new_localized_strings.sh" time="0.179906">
         
       </testcase>
     
