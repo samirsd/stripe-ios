@@ -8,8 +8,9 @@ this repository with the other overrides.
 On Mac Catalyst, the SDK opens card authentication in the user's browser. Closing
 that browser page and activating Carnyx does not reliably emit the iOS
 `willEnterForeground` notification. An unresolved PaymentSheet could consequently
-remain in Processing. This patch also observes `didBecomeActive` during that
-external redirect, then invokes the SDK's existing canonical intent retrieval,
+remain in Processing. This patch also observes UIKit `didBecomeActive` and the
+real public AppKit `NSApplication.didBecomeActiveNotification` during that external
+redirect, then invokes the SDK's existing canonical intent retrieval,
 polling and cancellation policy. Returning to Carnyx with the challenge still open
 uses that same policy; incomplete authentication can be canceled and safely retried.
 No payment is granted from an activation or URL alone.
@@ -41,14 +42,21 @@ Reassess this small patch when upgrading Stripe and remove it when upstream has 
 compatible fix. Actual browser failure, abandonment and success still require
 runtime qualification of the final signed Carnyx build.
 
-The first Carnyx runtime return test did not recover, while its real callback did.
-Physical app activation was not independently established in that run. Temporary
-read-only diagnostics are therefore restricted to `com.s2.carnyx.billingqa` with
+A signed Catalyst runtime trace subsequently proved that native AppKit activation
+can occur while UIKit stays active and only an unrelated private presentation scene
+changes state. The AppKit notification is observed by its public raw name through
+Foundation; no AppKit import, scene heuristics, or synthetic notifications are used.
+Its exact name is checked against the installed public AppKit constant in tests.
+All three real return signals use the same generation and one-shot arbitration.
+
+Temporary read-only diagnostics are restricted to `com.s2.carnyx.billingqa` with
 its signed `CarnyxBillingQA=true` marker. `billing-qa-stripe-lifecycle.jsonl` is
 bounded to 256 KB and contains only fixed event codes, numeric state/counts,
 Boolean-like 0/1 fields, process ID and timestamp. No event changes a payment,
 notification, browser, window or lifecycle decision. UIKit/scene observation in
 the handler is diagnostic only; it does not invoke recovery.
+
+Recovery notification sources: 1 UIKit foreground, 2 UIKit active, 3 AppKit active.
 
 Event codes: 1 begin, 2 recovery notification, 3 open result, 4 callback claim,
 5 reset, 6 return attempt, 7 buffered return, 8 consume; 20 handler begin,

@@ -34,7 +34,7 @@ with (out / "lifecycle-tests.log").open("w") as log:
 report = {"source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
           "tests_sha256": hashlib.sha256(tests.read_bytes()).hexdigest(),
           "exit_code": result.returncode, "command": command,
-          "scope": "Exact production lifecycle helper; Foundation notifications. No UIKit or network execution."}
+          "scope": "Exact production lifecycle helper; Foundation notifications and public AppKit notification constant. No GUI, UIKit or network execution."}
 (out / "lifecycle-result.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report, indent=2))
 sys.exit(result.returncode)

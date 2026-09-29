@@ -1,10 +1,12 @@
 import Foundation
+import AppKit
 import XCTest
 @testable import CatalystRedirectLifecycle
 
 final class STPCatalystRedirectLifecycleTests: XCTestCase {
     private let active = Notification.Name("test.didBecomeActive")
     private let foreground = Notification.Name("test.willEnterForeground")
+    private let nativeActive = STPCatalystRedirectLifecycle.nativeApplicationDidBecomeActive
 
     private func onMain(_ body: () throws -> Void) rethrows {
         if Thread.isMainThread { try body() }
@@ -12,7 +14,82 @@ final class STPCatalystRedirectLifecycleTests: XCTestCase {
     }
 
     private func make(_ center: NotificationCenter) -> STPCatalystRedirectLifecycle {
-        STPCatalystRedirectLifecycle(center: center, returnNotifications: [active, foreground])
+        STPCatalystRedirectLifecycle(center: center, returnNotifications: [active, foreground, nativeActive])
+    }
+
+
+    func testNativeNotificationNameMatchesPublicAppKitConstant() {
+        XCTAssertEqual(nativeActive, NSApplication.didBecomeActiveNotification)
+    }
+
+    func testNativeActivationRecoversWhileUIKitRemainsActive() throws {
+        try onMain {
+            let center = TrackingNotificationCenter(), action = NSObject()
+            let lifecycle = make(center)
+            var returns = 0
+            let token = lifecycle.begin(action: action, isCurrent: { true }, onReturn: { returns += 1 })
+            XCTAssertEqual(lifecycle.opened(true, token: token, action: action), .opened)
+            // No UIKit app or scene notification is required for a native return.
+            center.post(name: nativeActive, object: NSObject())
+            XCTAssertEqual(returns, 1)
+            XCTAssertEqual(center.liveCount, 0)
+            XCTAssertEqual(lifecycle.claimCallback(action: action), .alreadyConsumed)
+        }
+    }
+
+    func testAllThreeNotificationOrdersReconcileExactlyOnce() throws {
+        try onMain {
+            let orders = [[nativeActive, active, foreground], [nativeActive, foreground, active],
+                          [active, nativeActive, foreground], [foreground, nativeActive, active],
+                          [active, foreground, nativeActive], [foreground, active, nativeActive]]
+            for names in orders {
+                let center = TrackingNotificationCenter(), action = NSObject()
+                let lifecycle = make(center)
+                var returns = 0
+                let token = lifecycle.begin(action: action, isCurrent: { true }, onReturn: { returns += 1 })
+                XCTAssertEqual(lifecycle.opened(true, token: token, action: action), .opened)
+                names.forEach { center.post(name: $0, object: nil) }
+                XCTAssertEqual(returns, 1)
+                XCTAssertEqual(center.liveCount, 0)
+            }
+        }
+    }
+
+    func testNativeActivationBeforeOpenIsBufferedAndCallbackCannotRearm() throws {
+        try onMain {
+            for callbackWins in [false, true] {
+                let center = TrackingNotificationCenter(), action = NSObject()
+                let lifecycle = make(center)
+                var returns = 0
+                let token = lifecycle.begin(action: action, isCurrent: { true }, onReturn: { returns += 1 })
+                center.post(name: nativeActive, object: nil)
+                XCTAssertEqual(returns, 0)
+                if callbackWins { XCTAssertEqual(lifecycle.claimCallback(action: action), .claimed) }
+                XCTAssertEqual(lifecycle.opened(true, token: token, action: action), callbackWins ? .stale : .opened)
+                lifecycle.reconcileBufferedReturn(token: token)
+                center.post(name: nativeActive, object: nil)
+                center.post(name: active, object: nil)
+                XCTAssertEqual(returns, callbackWins ? 0 : 1)
+                XCTAssertEqual(center.liveCount, 0)
+            }
+        }
+    }
+
+    func testNativeActivationAfterFailedOpenOrResetDoesNotRetrieve() throws {
+        try onMain {
+            for failsOpen in [false, true] {
+                let center = TrackingNotificationCenter(), action = NSObject()
+                let lifecycle = make(center)
+                var returns = 0
+                let token = lifecycle.begin(action: action, isCurrent: { true }, onReturn: { returns += 1 })
+                if failsOpen { XCTAssertEqual(lifecycle.opened(false, token: token, action: action), .fallback) }
+                else { lifecycle.reset() }
+                center.post(name: nativeActive, object: nil)
+                XCTAssertEqual(returns, 0)
+                XCTAssertEqual(center.liveCount, 0)
+                XCTAssertEqual(lifecycle.claimCallback(action: action), .unmanaged)
+            }
+        }
     }
 
     func testActivationAfterOpenClaimsOneReturn() throws {
@@ -153,7 +230,7 @@ final class STPCatalystRedirectLifecycleTests: XCTestCase {
             var oldReturns = 0, newReturns = 0
             let oldToken = lifecycle.begin(action: oldAction, isCurrent: { true }, onReturn: { oldReturns += 1 })
             let newToken = lifecycle.begin(action: newAction, isCurrent: { true }, onReturn: { newReturns += 1 })
-            XCTAssertEqual(center.liveCount, 2)
+            XCTAssertEqual(center.liveCount, 3)
             XCTAssertEqual(lifecycle.opened(true, token: oldToken, action: oldAction), .stale)
             XCTAssertEqual(lifecycle.claimCallback(action: oldAction), .alreadyConsumed)
             XCTAssertEqual(lifecycle.opened(true, token: newToken, action: newAction), .opened)
@@ -202,7 +279,7 @@ final class STPCatalystRedirectLifecycleTests: XCTestCase {
             weak var weakLifecycle = lifecycle
             var returns = 0
             _ = lifecycle?.begin(action: action, isCurrent: { true }, onReturn: { returns += 1 })
-            XCTAssertEqual(center.liveCount, 2)
+            XCTAssertEqual(center.liveCount, 3)
             lifecycle = nil
             XCTAssertNil(weakLifecycle)
             XCTAssertEqual(center.liveCount, 0)

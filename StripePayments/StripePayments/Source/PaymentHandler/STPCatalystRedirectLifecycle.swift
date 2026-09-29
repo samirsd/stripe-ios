@@ -5,6 +5,10 @@ import Foundation
 /// Owns one external redirect's notification lifetime. All calls and observer
 /// deliveries are on the main queue; the SDK's intent retrieval remains authoritative.
 final class STPCatalystRedirectLifecycle {
+    // Public NSApplication.didBecomeActiveNotification. Catalyst cannot import
+    // AppKit, but its native application posts this through the same process's
+    // Foundation notification center even when UIKit remains foreground-active.
+    static let nativeApplicationDidBecomeActive = Notification.Name("NSApplicationDidBecomeActiveNotification")
     enum OpenResult { case opened, fallback, stale }
     enum CallbackClaim { case claimed, alreadyConsumed, unmanaged }
     private struct Pending {

@@ -118,6 +118,7 @@ public class STPPaymentHandler: NSObject {
     private var catalystQALifecycleObservers: [NSObjectProtocol] = []
     private let catalystRedirectLifecycle = STPCatalystRedirectLifecycle(returnNotifications: [
         UIApplication.willEnterForegroundNotification, UIApplication.didBecomeActiveNotification,
+        STPCatalystRedirectLifecycle.nativeApplicationDidBecomeActive,
     ])
     #endif
     /// Guards against simultaneous usage — only one "next action" can be handled at a time.
