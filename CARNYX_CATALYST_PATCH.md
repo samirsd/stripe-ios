@@ -40,3 +40,22 @@ Reviewed upstream 26.12.1 (`9f0d5aa20e6a690ff4d78b35c307f0fb88d6f36c`) and maste
 Reassess this small patch when upgrading Stripe and remove it when upstream has a
 compatible fix. Actual browser failure, abandonment and success still require
 runtime qualification of the final signed Carnyx build.
+
+The first Carnyx runtime return test did not recover, while its real callback did.
+Physical app activation was not independently established in that run. Temporary
+read-only diagnostics are therefore restricted to `com.s2.carnyx.billingqa` with
+its signed `CarnyxBillingQA=true` marker. `billing-qa-stripe-lifecycle.jsonl` is
+bounded to 256 KB and contains only fixed event codes, numeric state/counts,
+Boolean-like 0/1 fields, process ID and timestamp. No event changes a payment,
+notification, browser, window or lifecycle decision. UIKit/scene observation in
+the handler is diagnostic only; it does not invoke recovery.
+
+Event codes: 1 begin, 2 recovery notification, 3 open result, 4 callback claim,
+5 reset, 6 return attempt, 7 buffered return, 8 consume; 20 handler begin,
+21 handler reset, 22 redirect entry, 23 external-open completion, 24 Safari
+fallback, 25 Safari presentation completion, 26 web-auth fallback; 30 canonical
+read start, 31 read result, 32 handling-state change, 33 action change, 34 action
+completion; 40 scene activated, 41 scene deactivated, 42 application activated,
+43 application resigned, 44 application foregrounded. Pending phases are 0 none,
+1 opening, 2 opened, 3 consumed. Other status/state integers are the SDK/UIKit
+enum raw values. The local generation counter is unrelated to account/intent IDs.
