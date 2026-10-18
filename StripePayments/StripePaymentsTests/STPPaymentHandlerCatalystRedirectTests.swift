@@ -3,7 +3,7 @@ import Foundation
 import UIKit
 import XCTest
 @testable @_spi(STP) import StripePayments
-@_spi(STP) import StripeCore
+@testable @_spi(STP) import StripeCore
 
 /// Integration tests call the patched handler seams and its real canonical
 /// retrieval/status path. All Stripe API reads are supplied by the mock below.
