@@ -1,9 +1,9 @@
 # Carnyx Catalyst external authentication recovery
 
 Upstream: Stripe iOS 26.12.0, commit `bc51b3323a06c029c561474547910bff0db82fc8`.
-This normal Git checkout is a workspace override; do not modify Xcode's cached
-checkout. The Carnyx release source kit records the patch commit and transports
-this repository with the other overrides.
+This patch belongs to the dedicated 26.12 fork base. Consumers must select an
+explicit reviewed revision through their normal package manifest; do not modify
+Xcode cached checkouts or retarget this branch to the fork's older default branch.
 
 On Mac Catalyst, the SDK opens card authentication in the user's browser. Closing
 that browser page and activating Carnyx does not reliably emit the iOS
@@ -67,3 +67,8 @@ completion; 40 scene activated, 41 scene deactivated, 42 application activated,
 43 application resigned, 44 application foregrounded. Pending phases are 0 none,
 1 opening, 2 opened, 3 consumed. Other status/state integers are the SDK/UIKit
 enum raw values. The local generation counter is unrelated to account/intent IDs.
+
+The October 17 backlog reconciliation separately qualifies the exact helper,
+actual mocked Catalyst handler tests, and complete iOS/Catalyst products. Earlier
+signed-runtime observations above are historical context, not new real-provider
+or signed-consumer-build validation by this reconciliation.

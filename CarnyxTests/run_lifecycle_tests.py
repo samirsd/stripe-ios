@@ -28,7 +28,10 @@ let package = Package(name: "CatalystRedirectLifecycle", platforms: [.macOS(.v13
     .testTarget(name: "CatalystRedirectLifecycleTests", dependencies: ["CatalystRedirectLifecycle"]),
 ])
 ''')
-command = ["swift", "test", "--package-path", str(package), "--parallel", "--num-workers", "1"]
+command = ["swift", "test", "--jobs", "2", "--package-path", str(package),
+           "--scratch-path", str(out / "Build"), "--cache-path", str(out / "Cache"),
+           "--config-path", str(out / "Config"), "--security-path", str(out / "Security"),
+           "--parallel", "--num-workers", "1"]
 with (out / "lifecycle-tests.log").open("w") as log:
     result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT)
 report = {"source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
