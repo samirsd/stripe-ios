@@ -6,6 +6,8 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+import hashlib
+import xml.etree.ElementTree as ET
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 PACKAGE_NAME = 'stripe-ios'
@@ -103,8 +105,9 @@ class PackageWorkspaceTests(unittest.TestCase):
         self.assertIn("generic/platform=iOS", verify)
         self.assertIn("generic/platform=macOS,variant=Mac Catalyst", verify)
         self.assertIn("ARCHS=arm64 x86_64", verify)
-        self.assertIn("python3 CarnyxTests/prepare_handler_test_package.py", verify)
-        self.assertIn("-scheme CarnyxStripeHandlerTests-Package", verify)
+        self.assertIn("python3 CarnyxTests/prepare_handler_test_project.py", verify)
+        self.assertIn("-scheme CarnyxStripeHandlerTests", verify)
+        self.assertIn('-project "${CI_RUN_ROOT}/handler-package/CarnyxStripeHandlerTests.xcodeproj"', verify)
         self.assertIn("platform=macOS,variant=Mac Catalyst,arch=arm64", verify)
         self.assertIn("CODE_SIGNING_ALLOWED=NO", verify)
         self.assertIn("CODE_SIGNING_REQUIRED=NO test", verify)
@@ -117,6 +120,34 @@ class PackageWorkspaceTests(unittest.TestCase):
             self.assertIn("-" + option, verify)
 
 
+    def test_handler_fixture_is_exact_and_catalyst_tests_have_an_application_host(self):
+        output = self.root / "owned-handler-project"
+        subprocess.run(["python3", str(REPOSITORY / "CarnyxTests/prepare_handler_test_project.py"),
+                        "--output", str(output)], check=True)
+        expected = REPOSITORY / "StripePayments/StripePaymentsTests/STPPaymentHandlerCatalystRedirectTests.swift"
+        actual = output / "Tests/STPPaymentHandlerCatalystRedirectTests.swift"
+        self.assertEqual(actual.read_bytes(), expected.read_bytes())
+        project = output / "CarnyxStripeHandlerTests.xcodeproj"
+        data = json.loads(subprocess.check_output(["plutil", "-convert", "json", "-o", "-", str(project / "project.pbxproj")], text=True))
+        objects = data["objects"]
+        targets = {obj["name"]: (key, obj) for key, obj in objects.items() if obj["isa"] == "PBXNativeTarget"}
+        host_id, host = targets["CarnyxStripeHandlerHost"]
+        test_id, test = targets["CatalystHandlerTests"]
+        self.assertEqual(host["productType"], "com.apple.product-type.application")
+        self.assertEqual(test["productType"], "com.apple.product-type.bundle.unit-test")
+        self.assertTrue(any(objects[key]["target"] == host_id for key in test["dependencies"]))
+        for key in objects[test["buildConfigurationList"]]["buildConfigurations"]:
+            settings = objects[key]["buildSettings"]
+            self.assertEqual(settings["TEST_HOST"], "$(BUILT_PRODUCTS_DIR)/CarnyxStripeHandlerHost.app/Contents/MacOS/CarnyxStripeHandlerHost")
+            self.assertEqual(settings["BUNDLE_LOADER"], "$(TEST_HOST)")
+            self.assertEqual(settings["SUPPORTS_MACCATALYST"], "YES")
+        packages = [obj for obj in objects.values() if obj["isa"] == "XCLocalSwiftPackageReference"]
+        self.assertEqual([obj["relativePath"] for obj in packages], [str(REPOSITORY.resolve())])
+        scheme = ET.parse(project / "xcshareddata/xcschemes/CarnyxStripeHandlerTests.xcscheme")
+        reference = scheme.find("./TestAction/Testables/TestableReference")
+        self.assertEqual(reference.attrib["skipped"], "NO")
+        self.assertEqual(reference.find("BuildableReference").attrib["BlueprintIdentifier"], test_id)
+        self.assertEqual(scheme.find("./TestAction/MacroExpansion/BuildableReference").attrib["BlueprintIdentifier"], host_id)
 
 
 if __name__ == "__main__":

@@ -15,9 +15,9 @@ xcodebuild -jobs 2 -scmProvider system -scheme StripePaymentSheet \
   -clonedSourcePackagesDirPath "${CI_RUN_ROOT}/SourcePackages" \
   'ARCHS=arm64 x86_64' ONLY_ACTIVE_ARCH=NO \
   CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
-python3 CarnyxTests/prepare_handler_test_package.py --output "${CI_RUN_ROOT}/handler-package"
+python3 CarnyxTests/prepare_handler_test_project.py --output "${CI_RUN_ROOT}/handler-package"
 cd "${CI_RUN_ROOT}/handler-package"
-xcodebuild -jobs 2 -scmProvider system -scheme CarnyxStripeHandlerTests-Package \
+xcodebuild -jobs 2 -scmProvider system -project "${CI_RUN_ROOT}/handler-package/CarnyxStripeHandlerTests.xcodeproj" -scheme CarnyxStripeHandlerTests \
   -destination 'platform=macOS,variant=Mac Catalyst,arch=arm64' \
   -parallel-testing-enabled NO \
   -derivedDataPath "${CI_RUN_ROOT}/HandlerDerivedData" \
