@@ -106,13 +106,31 @@ public class STPPaymentHandler: NSObject {
         case invalidState
     }
 
-    internal var currentAction: STPPaymentHandlerActionParams?
+    internal var currentAction: STPPaymentHandlerActionParams? {
+        didSet {
+            #if targetEnvironment(macCatalyst)
+            _traceCatalystRedirect(.actionChanged, values: ["sameAction": oldValue === currentAction ? 1 : 0])
+            if oldValue !== currentAction { _resetCatalystRedirect() }
+            #endif
+        }
+    }
+    #if targetEnvironment(macCatalyst)
+    private var catalystQALifecycleObservers: [NSObjectProtocol] = []
+    private let catalystRedirectLifecycle = STPCatalystRedirectLifecycle(returnNotifications: [
+        UIApplication.willEnterForegroundNotification, UIApplication.didBecomeActiveNotification,
+        STPCatalystRedirectLifecycle.nativeApplicationDidBecomeActive,
+    ])
+    #endif
     /// Guards against simultaneous usage — only one "next action" can be handled at a time.
     /// This is global state across all STPPaymentHandler instances, though we track
     /// our own state so we can reset it if needed during `dealloc`.
     internal var isHandlingAction = false {
         didSet {
             Self.anyHandlerInProgress = isHandlingAction
+            #if targetEnvironment(macCatalyst)
+            _traceCatalystRedirect(.handlingChanged)
+            if !isHandlingAction { _resetCatalystRedirect() }
+            #endif
         }
     }
     private static var anyHandlerInProgress = false
@@ -140,6 +158,11 @@ public class STPPaymentHandler: NSObject {
     }
 
     deinit {
+        #if targetEnvironment(macCatalyst)
+        catalystRedirectLifecycle.reset()
+        for observer in catalystQALifecycleObservers { NotificationCenter.default.removeObserver(observer) }
+        STPURLCallbackHandler.shared().unregisterListener(self)
+        #endif
         // If this instance was mid-flow when deallocated, clear the global lock.
         // There's nothing else reasonable to do — the action is abandoned and no
         // completion will ever fire, so we must release the lock to unblock future payments.
@@ -623,6 +646,10 @@ public class STPPaymentHandler: NSObject {
                     guard let self else {
                         return
                     }
+                    #if targetEnvironment(macCatalyst)
+                    self._traceCatalystRedirect(.canonicalCompletion, values: ["status": status.rawValue,
+                        "setup": 1, "hasError": resultError == nil ? 0 : 1])
+                    #endif
                     self.currentAction = nil
 
                     wrappedCompletion(status, resultSetupIntent, resultError)
@@ -910,6 +937,10 @@ public class STPPaymentHandler: NSObject {
             guard let self else {
                 return
             }
+            #if targetEnvironment(macCatalyst)
+            self._traceCatalystRedirect(.canonicalCompletion, values: ["status": status.rawValue,
+                "setup": 0, "hasError": error == nil ? 0 : 1])
+            #endif
             self.currentAction = nil
             completion(status, resultPaymentIntent, error)
         }
@@ -946,6 +977,10 @@ public class STPPaymentHandler: NSObject {
             guard let self else {
                 return
             }
+            #if targetEnvironment(macCatalyst)
+            self._traceCatalystRedirect(.canonicalCompletion, values: ["status": status.rawValue,
+                "setup": 1, "hasError": resultError == nil ? 0 : 1])
+            #endif
             self.currentAction = nil
             completion(status, resultSetupIntent, resultError)
         }
@@ -1565,6 +1600,10 @@ public class STPPaymentHandler: NSObject {
     ///   - currentAction: Action parameters to process, defaults to self.currentAction
     ///   - pollingBudget: Existing polling budget, or nil for first attempt
     func _retrieveAndCheckIntentForCurrentAction(currentAction: STPPaymentHandlerActionParams? = nil, pollingBudget: PollingBudget? = nil) {
+        #if targetEnvironment(macCatalyst)
+        _traceCatalystRedirect(.canonicalReadStarted, values: ["hasExplicitAction": currentAction == nil ? 0 : 1,
+            "hasPollingBudget": pollingBudget == nil ? 0 : 1])
+        #endif
         // Alipay requires us to hit an endpoint before retrieving the PI, to ensure the status is up to date.
         let pingMarlinIfNecessary: ((STPPaymentHandlerPaymentIntentActionParams, @escaping STPVoidBlock) -> Void) = {
             currentAction,
@@ -1604,6 +1643,12 @@ public class STPPaymentHandler: NSObject {
                         currentAction: currentAction,
                         timeout: pollingBudget?.networkTimeout
                     ) { [self] paymentIntent, error in
+                        #if targetEnvironment(macCatalyst)
+                        _traceCatalystRedirect(.canonicalReadResult, values: ["setup": 0,
+                            "hasIntent": paymentIntent == nil ? 0 : 1, "hasError": error == nil ? 0 : 1,
+                            "status": paymentIntent?.status.rawValue ?? -99,
+                            "actionMatches": self.currentAction === currentAction ? 1 : 0])
+                        #endif
                         guard let paymentIntent, error == nil else {
                             // Retry if polling budget allows. For the first call (no polling budget), create a minimal
                             // budget to allow one retry. This handles transient network errors.
@@ -1705,6 +1750,12 @@ public class STPPaymentHandler: NSObject {
                 currentAction: currentAction,
                 timeout: pollingBudget?.networkTimeout
             ) { [self] setupIntent, error in
+                #if targetEnvironment(macCatalyst)
+                _traceCatalystRedirect(.canonicalReadResult, values: ["setup": 1,
+                    "hasIntent": setupIntent == nil ? 0 : 1, "hasError": error == nil ? 0 : 1,
+                    "status": setupIntent?.status.rawValue ?? -99,
+                    "actionMatches": self.currentAction === currentAction ? 1 : 0])
+                #endif
                 guard let setupIntent, error == nil else {
                     // Retry if polling budget allows. For the first call (no polling budget), create a minimal
                     // budget to allow one retry. This handles transient network errors.
@@ -1793,6 +1844,71 @@ public class STPPaymentHandler: NSObject {
         }
     }
 
+    #if targetEnvironment(macCatalyst)
+    // Internal seams also exercised by Catalyst handler regression tests.
+    func _beginCatalystRedirect(for action: STPPaymentHandlerActionParams) -> UUID {
+        _traceCatalystRedirect(.handlerBegin, values: ["actionMatches": currentAction === action ? 1 : 0])
+        return catalystRedirectLifecycle.begin(action: action, isCurrent: { [weak self, weak action] in
+            guard let self, let action else { return false }
+            return self.isHandlingAction && self.currentAction === action
+        }, onReturn: { [weak self, weak action] in
+            guard let self, let action, self.currentAction === action, self.isHandlingAction else { return }
+            STPURLCallbackHandler.shared().unregisterListener(self)
+            self.logURLRedirectNextActionFinished(returnType: .appForegrounded)
+            self._retrieveAndCheckIntentForCurrentAction()
+        })
+    }
+
+    func _completeCatalystRedirectOpen(_ success: Bool, token: UUID, action: STPPaymentHandlerActionParams) -> STPCatalystRedirectLifecycle.OpenResult {
+        catalystRedirectLifecycle.opened(success, token: token, action: action)
+    }
+
+    func _reconcileBufferedCatalystReturn(token: UUID) {
+        catalystRedirectLifecycle.reconcileBufferedReturn(token: token)
+    }
+
+    private func _resetCatalystRedirect() {
+        _traceCatalystRedirect(.handlerReset)
+        catalystRedirectLifecycle.reset()
+        for observer in catalystQALifecycleObservers { NotificationCenter.default.removeObserver(observer) }
+        catalystQALifecycleObservers.removeAll()
+        STPURLCallbackHandler.shared().unregisterListener(self)
+    }
+
+    private func _traceCatalystRedirect(_ event: STPCatalystRedirectTrace.Event,
+                                       notification: Notification? = nil, values: [String: Int] = [:]) {
+        guard STPCatalystRedirectTrace.enabled else { return }
+        var values = values
+        values["hasAction"] = currentAction == nil ? 0 : 1
+        values["handling"] = isHandlingAction ? 1 : 0
+        values["appState"] = UIApplication.shared.applicationState.rawValue
+        let scene = currentAction?.authenticationContext.authenticationPresentingViewController().viewIfLoaded?.window?.windowScene
+        values["hasScene"] = scene == nil ? 0 : 1
+        values["sceneState"] = scene?.activationState.rawValue ?? -99
+        if let eventScene = notification?.object as? UIScene {
+            values["notificationHasScene"] = 1
+            values["sceneMatches"] = eventScene === scene ? 1 : 0
+        }
+        STPCatalystRedirectTrace.record(event, values: values)
+    }
+
+    private func _installCatalystQALifecycleTrace() {
+        guard STPCatalystRedirectTrace.enabled, catalystQALifecycleObservers.isEmpty else { return }
+        let sources: [(Notification.Name, STPCatalystRedirectTrace.Event)] = [
+            (UIScene.didActivateNotification, .sceneActivated),
+            (UIScene.willDeactivateNotification, .sceneDeactivated),
+            (UIApplication.didBecomeActiveNotification, .appActivated),
+            (UIApplication.willResignActiveNotification, .appResigned),
+            (UIApplication.willEnterForegroundNotification, .appForegrounded),
+        ]
+        catalystQALifecycleObservers = sources.map { name, event in
+            NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] notification in
+                self?._traceCatalystRedirect(event, notification: notification)
+            }
+        }
+    }
+    #endif
+
     @objc func _handleWillForegroundNotification() {
         NotificationCenter.default.removeObserver(
             self,
@@ -1840,8 +1956,17 @@ public class STPPaymentHandler: NSObject {
             STPURLCallbackHandler.shared().register(self, for: returnURL)
         }
 
+        #if targetEnvironment(macCatalyst)
+        _installCatalystQALifecycleTrace()
+        _traceCatalystRedirect(.redirectEntered, values: ["hasNativeURL": nativeURL == nil ? 0 : 1,
+            "hasFallbackURL": fallbackURL == nil ? 0 : 1, "usesWebAuth": useWebAuthSession ? 1 : 0,
+            "hasReturnURL": returnURL == nil ? 0 : 1])
+        #endif
         // Open the link in SafariVC
         let presentSFViewControllerBlock: (() -> Void) = {
+            #if targetEnvironment(macCatalyst)
+            self._traceCatalystRedirect(.safariFallback, values: ["actionMatches": self.currentAction === currentAction ? 1 : 0])
+            #endif
             let context = currentAction.authenticationContext
 
             let presentingViewController = context.authenticationPresentingViewController()
@@ -1860,6 +1985,9 @@ public class STPPaymentHandler: NSObject {
                     ["http", "https"].contains(fallbackURL.scheme)
                 {
                     if useWebAuthSession {
+                        #if targetEnvironment(macCatalyst)
+                        self._traceCatalystRedirect(.webAuthFallback)
+                        #endif
                         if self._redirectShim != nil {
                             // No-op if the redirect shim is active, as we don't want to open the consent dialog. We'll call the completion block automatically.
                             return
@@ -1907,6 +2035,9 @@ public class STPPaymentHandler: NSObject {
                         self.safariViewController = safariViewController
                         self.safariViewControllerDismissedManually = false
                         presentingViewController.present(safariViewController, animated: true, completion: {
+                            #if targetEnvironment(macCatalyst)
+                            self._traceCatalystRedirect(.safariPresented)
+                            #endif
                             completion?(safariViewController)
                         })
                     }
@@ -1943,10 +2074,29 @@ public class STPPaymentHandler: NSObject {
 
         // We don't check canOpenURL before opening the URL because that requires users to pre-register the custom URL schemes
         if let url = url {
+            #if targetEnvironment(macCatalyst)
+            let catalystRedirectToken = _beginCatalystRedirect(for: currentAction)
+            #endif
             UIApplication.shared.open(
                 url,
                 options: options,
                 completionHandler: { success in
+                    #if targetEnvironment(macCatalyst)
+                    self._traceCatalystRedirect(.externalOpenCompleted, values: ["success": success ? 1 : 0,
+                        "actionMatches": self.currentAction === currentAction ? 1 : 0])
+                    // A real callback may already have consumed this generation
+                    // before UIApplication reports a successful open.
+                    switch self._completeCatalystRedirectOpen(success, token: catalystRedirectToken, action: currentAction) {
+                    case .stale:
+                        return
+                    case .fallback:
+                        presentSFViewControllerBlock()
+                    case .opened:
+                        self.logURLRedirectNextActionStarted(redirectType: .nativeApp)
+                        completion?(nil)
+                        self._reconcileBufferedCatalystReturn(token: catalystRedirectToken)
+                    }
+                    #else
                     if !success {
                         // no app installed, launch safari view controller
                         presentSFViewControllerBlock()
@@ -1960,6 +2110,7 @@ public class STPPaymentHandler: NSObject {
                             object: nil
                         )
                     }
+                    #endif
                 }
             )
         } else {
@@ -2481,6 +2632,10 @@ extension STPPaymentHandler: SFSafariViewControllerDelegate {
             // (such as a banking app) and is waiting for a response from that app.
             return false
         }
+        #if targetEnvironment(macCatalyst)
+        guard isHandlingAction, let action = currentAction else { return false }
+        if catalystRedirectLifecycle.claimCallback(action: action) == .alreadyConsumed { return false }
+        #endif
         logURLRedirectNextActionFinished(returnType: .returnURLCallback)
         // Note: At least my iOS 15 device, willEnterForegroundNotification is triggered before this method when returning from another app, which means this method isn't called because it unregisters from STPURLCallbackHandler.
         let context = currentAction?.authenticationContext

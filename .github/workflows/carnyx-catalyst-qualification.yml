@@ -1,0 +1,33 @@
+name: Carnyx Catalyst qualification
+
+on:
+  push:
+    branches: [codex/carnyx-catalyst-redirect, codex/carnyx-stripe-26.12-base]
+  pull_request:
+    branches: [codex/carnyx-stripe-26.12-base]
+  workflow_dispatch:
+
+concurrency:
+  group: carnyx-catalyst-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  catalyst-qualification:
+    runs-on: [self-hosted, macOS, ARM64, carnyx, carnyx-catalyst-redirect-v1]
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify dependency workspace isolation
+        run: python3 .github/tests/test_package_workspace.py
+      - name: Prepare isolated tracked workspace
+        run: bash .github/scripts/prepare-package-workspace.sh
+      - name: Verify exact lifecycle helper and complete products with actual Catalyst handler tests
+        run: bash "${CI_REPO_ROOT}/.github/scripts/verify-carnyx-catalyst.sh"
+      - name: Cleanup isolated workspace
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ -n "${CI_RUN_ROOT:-}" ] && [ -d "${CI_RUN_ROOT}" ]; then
+            rm -rf "${CI_RUN_ROOT}"
+          fi
