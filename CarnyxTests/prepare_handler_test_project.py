@@ -45,9 +45,9 @@ def encode(value, indent=0):
     return json.dumps(str(value))
 
 objects = {}
-def add(name, isa, **fields):
-    objects[oid(name)] = {"isa": isa, **fields}
-    return oid(name)
+def add(object_key, isa, **fields):
+    objects[oid(object_key)] = {"isa": isa, **fields}
+    return oid(object_key)
 
 host_ref = add("host-source", "PBXFileReference", lastKnownFileType="sourcecode.swift", path="Host/AppDelegate.swift", sourceTree="<group>")
 test_ref = add("test-source", "PBXFileReference", lastKnownFileType="sourcecode.swift", path="Tests/STPPaymentHandlerCatalystRedirectTests.swift", sourceTree="<group>")
