@@ -59,6 +59,7 @@ package = add("stripe-package", "XCLocalSwiftPackageReference", relativePath=str
 payments = add("payments-product", "XCSwiftPackageProductDependency", package=package, productName="StripePayments")
 payments_build = add("payments-build", "PBXBuildFile", productRef=payments)
 common = {"SWIFT_VERSION": "5.0", "SDKROOT": "iphoneos", "IPHONEOS_DEPLOYMENT_TARGET": "15.0",
+          "MACOSX_DEPLOYMENT_TARGET": "12.0",
           "SUPPORTS_MACCATALYST": "YES", "SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD": "NO",
           "TARGETED_DEVICE_FAMILY": "2", "GENERATE_INFOPLIST_FILE": "YES",
           "CODE_SIGNING_ALLOWED": "NO", "CODE_SIGNING_REQUIRED": "NO"}
