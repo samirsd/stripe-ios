@@ -71,6 +71,7 @@ def configs(name, settings):
         build.update({"SWIFT_OPTIMIZATION_LEVEL": "-Onone" if config == "Debug" else "-O", "ENABLE_TESTABILITY": "YES" if config == "Debug" else "NO"})
         if config == "Debug":
             build["SWIFT_ACTIVE_COMPILATION_CONDITIONS"] = "DEBUG $(inherited)"
+            build["ONLY_ACTIVE_ARCH"] = "YES"
         entries.append(add(name + config, "XCBuildConfiguration", name=config, buildSettings=build))
     return add(name + "configs", "XCConfigurationList", buildConfigurations=entries, defaultConfigurationIsVisible=0, defaultConfigurationName="Release")
 
